@@ -1,24 +1,5 @@
 import { defineStore } from 'pinia'
-
-interface Certification {
-  id: number
-  name: string
-  issuer: string
-  issue_date: string
-  expiry_date: string | null
-  credential_id: string
-  credential_url: string
-  description: string | null
-  status: string
-  created_at: string
-  updated_at: string
-}
-
-interface CertificationsState {
-  certifications: Certification[]
-  loading: boolean
-  error: string | null
-}
+import type { Certification, CertificationsState, ApiResponse } from '~/types/shared'
 
 export const useCertificationsStore = defineStore('certifications', {
   state: (): CertificationsState => ({
@@ -43,17 +24,11 @@ export const useCertificationsStore = defineStore('certifications', {
       this.error = null
       
       try {
-        const response = await fetch(`${config.public.apiUrl}/certifications`, {
+        const data = await $fetch<ApiResponse<Certification>>(`${config.public.apiUrl}/certifications`, {
           headers: {
             'Accept': 'application/json'
           }
         })
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des certifications')
-        }
-
-        const data = await response.json()
         this.certifications = data.data
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Une erreur est survenue'

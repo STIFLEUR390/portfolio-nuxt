@@ -1,11 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Experience, ApiResponse } from '~/types/experience'
-
-interface ExperienceState {
-  experiences: Experience[]
-  loading: boolean
-  error: string | null
-}
+import type { Experience, ExperienceState, ApiResponse } from '~/types/shared'
 
 export const useExperienceStore = defineStore('experience', {
   state: (): ExperienceState => ({
@@ -27,17 +21,11 @@ export const useExperienceStore = defineStore('experience', {
       this.error = null
       
       try {
-        const response = await fetch(`${config.public.apiUrl}/experiences`, {
+        const data = await $fetch<ApiResponse<Experience>>(`${config.public.apiUrl}/experience`, {
           headers: {
             'Accept': 'application/json'
           }
         })
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des expériences')
-        }
-
-        const data = await response.json()
         this.experiences = data.data
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Une erreur est survenue'

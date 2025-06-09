@@ -1,19 +1,5 @@
 import { defineStore } from 'pinia'
-
-interface SocialMedia {
-  id: number
-  name: string
-  icon: string
-  url: string | null
-  created_at: string
-  updated_at: string
-}
-
-interface SocialMediaState {
-  socialMedias: SocialMedia[]
-  loading: boolean
-  error: string | null
-}
+import type { SocialMedia, SocialMediaState, ApiResponse } from '~/types/shared'
 
 export const useSocialMediaStore = defineStore('socialMedia', {
   state: (): SocialMediaState => ({
@@ -35,20 +21,15 @@ export const useSocialMediaStore = defineStore('socialMedia', {
       this.error = null
       
       try {
-        const response = await fetch(`${config.public.apiUrl}/socialMedia`, {
+        const data = await $fetch<ApiResponse<SocialMedia>>(`${config.public.apiUrl}/social-media`, {
           headers: {
             'Accept': 'application/json'
           }
         })
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des médias sociaux')
-        }
-
-        const data = await response.json()
         this.socialMedias = data.data
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Une erreur est survenue'
+        console.error('Erreur lors de la récupération des réseaux sociaux:', error)
       } finally {
         this.loading = false
       }

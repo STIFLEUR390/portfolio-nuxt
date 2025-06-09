@@ -1,26 +1,5 @@
 import { defineStore } from 'pinia'
-
-interface Profile {
-  id: number
-  name: string
-  profession: string
-  short_description: string
-  description: string
-  about_me: string
-  years_experience: string
-  customers_worldwide: string
-  total_projects: string
-  cv_url: string
-  profile_picture: string
-  created_at: string
-  updated_at: string
-}
-
-interface ProfileState {
-  profile: Profile | null
-  loading: boolean
-  error: string | null
-}
+import type { Profile, ProfileState, ApiResponse } from '~/types/shared'
 
 export const useProfileStore = defineStore('profile', {
   state: (): ProfileState => ({
@@ -42,20 +21,15 @@ export const useProfileStore = defineStore('profile', {
       this.error = null
       
       try {
-        const response = await fetch(`${config.public.apiUrl}/profiles`, {
+        const data = await $fetch<ApiResponse<Profile>>(`${config.public.apiUrl}/profile`, {
           headers: {
             'Accept': 'application/json'
           }
         })
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération du profil')
-        }
-
-        const data = await response.json()
-        this.profile = data.data[0] // On prend le premier profil car il n'y en a qu'un seul
+        this.profile = data.data[0]
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Une erreur est survenue'
+        console.error('Erreur lors de la récupération du profil:', error)
       } finally {
         this.loading = false
       }

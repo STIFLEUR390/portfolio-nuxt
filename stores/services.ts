@@ -1,20 +1,5 @@
 import { defineStore } from 'pinia'
-
-interface Service {
-  id: number
-  title: string
-  description: string
-  icon: string
-  costs: string | null
-  created_at: string
-  updated_at: string
-}
-
-interface ServicesState {
-  services: Service[]
-  loading: boolean
-  error: string | null
-}
+import type { Service, ServicesState, ApiResponse } from '~/types/shared'
 
 export const useServicesStore = defineStore('services', {
   state: (): ServicesState => ({
@@ -34,19 +19,17 @@ export const useServicesStore = defineStore('services', {
       const config = useRuntimeConfig()
       this.loading = true
       this.error = null
+      
       try {
-        const response = await fetch(`${config.public.apiUrl}/services`, {
+        const data = await $fetch<ApiResponse<Service>>(`${config.public.apiUrl}/services`, {
           headers: {
             'Accept': 'application/json'
           }
         })
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des services')
-        }
-        const data = await response.json()
         this.services = data.data
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Une erreur est survenue'
+        console.error('Erreur lors de la récupération des services:', error)
       } finally {
         this.loading = false
       }
