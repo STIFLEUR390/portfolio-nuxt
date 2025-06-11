@@ -56,7 +56,7 @@
               <SkeletonLoader v-for="i in 3" :key="i" />
             </template>
             <template v-else>
-              <p v-html="profileStore.profile?.about_me"></p>
+              <markdown-content :content="profileStore.profile?.about_me" />
             </template>
           </div>
 

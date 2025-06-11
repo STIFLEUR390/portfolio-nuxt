@@ -20,7 +20,7 @@
           <div class="about-details-inner shadow-box">
             <img src="~/assets/images/icon2.png" alt="Star">
             <h1>{{ profileStore.getProfile?.name || 'Chargement...' }}</h1>
-            <p v-html="profileStore.getProfile?.about_me || ''"></p>
+            <markdown-content :content="profileStore.getProfile?.about_me || ''" />
           </div>
         </div>
       </div>

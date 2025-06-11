@@ -19,9 +19,9 @@ export const useExperienceStore = defineStore('experience', {
       const config = useRuntimeConfig()
       this.loading = true
       this.error = null
-      
+
       try {
-        const data = await $fetch<ApiResponse<Experience>>(`${config.public.apiUrl}/experience`, {
+        const data = await $fetch<ApiResponse<Experience>>(`${config.public.apiUrl}/experiences`, {
           headers: {
             'Accept': 'application/json'
           }

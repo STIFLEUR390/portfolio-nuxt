@@ -19,9 +19,9 @@ export const useProfileStore = defineStore('profile', {
       const config = useRuntimeConfig()
       this.loading = true
       this.error = null
-      
+
       try {
-        const data = await $fetch<ApiResponse<Profile>>(`${config.public.apiUrl}/profile`, {
+        const data = await $fetch<ApiResponse<Profile>>(`${config.public.apiUrl}/profiles`, {
           headers: {
             'Accept': 'application/json'
           }

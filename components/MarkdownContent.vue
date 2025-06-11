@@ -1,15 +1,26 @@
 <template>
   <div class="markdown-content">
-    <MDC v-if="content" :value="content" />
-      <div v-else class="loading-skeleton">
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
-      </div>
+    <VMarkdownView
+      v-if="content.length > 0"
+      :mode="mode"
+      :content="content"
+    ></VMarkdownView>
+    <div v-else class="loading-skeleton">
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
   </div>
 </template>
 
 <script setup>
+import { defineAsyncComponent } from 'vue'
+
+const VMarkdownView = defineAsyncComponent(() => 
+  import('vue3-markdown').then(mod => mod.VMarkdownView)
+)
+
+const mode = ref('dark')
 const props = defineProps({
   content: {
     type: String,
@@ -18,64 +29,29 @@ const props = defineProps({
 })
 </script>
 
-<style scoped>
+<style>
 .markdown-content {
-  @apply text-gray-700 dark:text-gray-300;
-}
-
-.markdown-content :deep(p) {
-  @apply mb-4 leading-relaxed;
-}
-
-.markdown-content :deep(h1) {
-  @apply text-3xl font-bold mb-6 mt-8;
-}
-
-.markdown-content :deep(h2) {
-  @apply text-2xl font-bold mb-4 mt-6;
-}
-
-.markdown-content :deep(h3) {
-  @apply text-xl font-bold mb-3 mt-5;
-}
-
-.markdown-content :deep(ul) {
-  @apply list-disc list-inside mb-4;
-}
-
-.markdown-content :deep(ol) {
-  @apply list-decimal list-inside mb-4;
-}
-
-.markdown-content :deep(li) {
-  @apply mb-2;
-}
-
-.markdown-content :deep(a) {
-  @apply text-blue-600 dark:text-blue-400 hover:underline;
-}
-
-.markdown-content :deep(blockquote) {
-  @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-4;
-}
-
-.markdown-content :deep(code) {
-  @apply bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm;
-}
-
-.markdown-content :deep(pre) {
-  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg my-4 overflow-x-auto;
-}
-
-.markdown-content :deep(pre code) {
-  @apply bg-transparent p-0;
+  width: 100%;
 }
 
 .loading-skeleton {
-  @apply space-y-4;
+  padding: 1rem;
 }
 
 .skeleton-line {
-  @apply h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
+  height: 1rem;
+  background: #e0e0e0;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite;
 }
-</style> 
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.6; }
+}
+.markdown-body[data-theme=dark] {
+  background-color: #1f1f1f !important;
+}
+</style>

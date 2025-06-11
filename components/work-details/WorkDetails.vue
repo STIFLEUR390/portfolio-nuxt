@@ -45,12 +45,12 @@ const groupedGallery = computed(() => {
           <img src="~/assets/images/icon2.png" alt="Icon">
           <div class="project-details-info flex-1">
             <h3>Le problème</h3>
-            <div v-html="project.problem"></div>
+            <markdown-content :content="project.problem" />
           </div>
 
           <div class="project-details-info flex-1">
             <h3>Approche</h3>
-            <div v-html="project.approach"></div>
+            <markdown-content :content="project.approach" />
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ const groupedGallery = computed(() => {
           </div>
           <div class="right-details">
             <h3>Solution</h3>
-            <div v-html="project.solution"></div>
+            <markdown-content :content="project.solution" />
           </div>
         </div>
       </div>

@@ -19,9 +19,9 @@ export const useSocialMediaStore = defineStore('socialMedia', {
       const config = useRuntimeConfig()
       this.loading = true
       this.error = null
-      
+
       try {
-        const data = await $fetch<ApiResponse<SocialMedia>>(`${config.public.apiUrl}/social-media`, {
+        const data = await $fetch<ApiResponse<SocialMedia>>(`${config.public.apiUrl}/socialMedia`, {
           headers: {
             'Accept': 'application/json'
           }
