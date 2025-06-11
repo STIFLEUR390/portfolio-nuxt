@@ -1,18 +1,70 @@
+<script setup>
+const postStore = usePostStore()
+const postCategoryStore = usePostCategoryStore()
+const postTagStore = usePostTagStore()
+const searchQuery = ref('')
+const route = useRoute()
 
+// Récupérer les données au montage du composant
+onMounted(async () => {
+  const params = {
+    per_page: 10,
+    includes: 'author,categories,tags'
+  }
+
+  // Ajouter les filtres si présents dans l'URL
+  if (route.query.category) {
+    params.category = route.query.category
+  }
+  if (route.query.tag) {
+    params.tag = route.query.tag
+  }
+
+  await Promise.all([
+    postStore.fetchPosts(params),
+    postCategoryStore.fetchCategories(),
+    postTagStore.fetchTags()
+  ])
+})
+
+// Fonction de recherche
+const handleSearch = async () => {
+  if (searchQuery.value.trim()) {
+    await postStore.fetchPosts({ 
+      search: searchQuery.value.trim(),
+      includes: 'author,categories,tags'
+    })
+  } else {
+    await postStore.fetchPosts({ 
+      per_page: 10,
+      includes: 'author,categories,tags'
+    })
+  }
+}
+
+// Fonction pour formater la date
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+</script>
 
 <template>
   <!-- Breadcrumb -->
   <section class="breadcrumb-area">
     <div class="container">
       <div class="breadcrumb-content" data-aos="fade-up">
-        <p>HOME - BLOG</p>
+        <p>ACCUEIL - BLOG</p>
         <h1 class="section-heading">
-          <img src="~/assets/images/star-2.png" alt="Star"> Blog with rightsidebar 
-          <img src="~/assets/images/star-2.png" alt="Star"></h1>
+          <img src="~/assets/images/star-2.png" alt="Star"> Blog 
+          <img src="~/assets/images/star-2.png" alt="Star">
+        </h1>
       </div>
     </div>
   </section>
-
 
   <!-- Blog Items -->
   <section class="blog-area">
@@ -20,112 +72,79 @@
       <div class="row">
         <div class="col-md-8">
           <div class="blog-items">
-            <div class="blog-item" data-aos="zoom-in">
-              <div class="img-box">
-                <img src="~/assets/images/blog1.jpeg" alt="Blog">
-              </div>
-              <div class="content">
-                <span class="meta">25 March 2022 - Comments (4) - Share (7)</span>
-                <h1><NuxtLink to="/blog-details">Consulted admitting is power acuteness.</NuxtLink></h1>
-                <p>Sit amet luctussd fav venenatis, lectus magna fringilla inis urna, porttitor rhoncus dolor purus non
-                  enim praesent in elementum sahas facilisis leo, vel fringilla est ullamcorper eget nulla facilisi etisam
-                  dignissim diam quis enim lobortis viverra orci sagittis eu volutpat odio facilisis mauris sit.</p>
-                <NuxtLink to="/blog-details" class="theme-btn">Read More</NuxtLink>
-              </div>
+            <div v-if="postStore.isLoading" class="text-center">
+              <p>Chargement...</p>
             </div>
-
-            <div class="blog-item" data-aos="zoom-in">
-              <div class="img-box">
-                <img src="~/assets/images/blog2.jpeg" alt="Blog">
-              </div>
-              <div class="content">
-                <span class="meta">25 March 2022 - Comments (4) - Share (7)</span>
-                <h1><NuxtLink to="/blog-details">Unsatiable entreaties may collecting Power.</NuxtLink></h1>
-                <p>Sit amet luctussd fav venenatis, lectus magna fringilla inis urna, porttitor rhoncus dolor purus non
-                  enim praesent in elementum sahas facilisis leo, vel fringilla est ullamcorper eget nulla facilisi etisam
-                  dignissim diam quis enim lobortis viverra orci sagittis eu volutpat odio facilisis mauris sit.</p>
-                <NuxtLink to="/blog-details" class="theme-btn">Read More</NuxtLink>
-              </div>
+            <div v-else-if="postStore.hasError" class="text-center text-danger">
+              <p>{{ postStore.error }}</p>
             </div>
-
-            <div class="blog-item" data-aos="zoom-in">
-              <div class="img-box">
-                <img src="~/assets/images/blog1.jpeg" alt="Blog">
+            <template v-else>
+              <div v-for="post in postStore.getPosts" :key="post.id" class="blog-item" data-aos="zoom-in">
+                <div class="img-box">
+                  <img :src="post.cover_image" :alt="post.title">
+                </div>
+                <div class="content">
+                  <span class="meta">
+                    {{ formatDate(post.created_at) }} - 
+                    Par {{ post.author.name }} - 
+                    Commentaires ({{ post.comments_count }})
+                  </span>
+                  <h1><NuxtLink :to="`/blog-details/${post.slug}`">{{ post.title }}</NuxtLink></h1>
+                  <p>{{ post.summary }}</p>
+                  <NuxtLink :to="`/blog-details/${post.slug}`" class="theme-btn">Lire la suite</NuxtLink>
+                </div>
               </div>
-              <div class="content">
-                <span class="meta">25 March 2022 - Comments (4) - Share (7)</span>
-                <h1><NuxtLink to="/blog-details">Discovery incommode earnestly he commanded</NuxtLink></h1>
-                <p>Sit amet luctussd fav venenatis, lectus magna fringilla inis urna, porttitor rhoncus dolor purus non
-                  enim praesent in elementum sahas facilisis leo, vel fringilla est ullamcorper eget nulla facilisi etisam
-                  dignissim diam quis enim lobortis viverra orci sagittis eu volutpat odio facilisis mauris sit.</p>
-                <NuxtLink to="/blog-details" class="theme-btn">Read More</NuxtLink>
-              </div>
-            </div>
-
+            </template>
           </div>
         </div>
         <div class="col-md-4">
           <div class="blog-sidebar">
             <div class="blog-sidebar-inner">
-
               <div class="blog-sidebar-widget search-widget">
                 <div class="blog-sidebar-widget-inner" data-aos="zoom-in">
-                  <form class="shadow-box"  @submit.prevent>
-                    <input type="text" placeholder="Search Here...">
-                    <button class="theme-btn">Search</button>
+                  <form class="shadow-box" @submit.prevent="handleSearch">
+                    <input v-model="searchQuery" type="text" placeholder="Rechercher...">
+                    <button class="theme-btn">Rechercher</button>
                   </form>
                 </div>
               </div>
 
               <div class="blog-sidebar-widget recent-post-widget" data-aos="zoom-in">
                 <div class="blog-sidebar-widget-inner shadow-box">
-                  <h3>Recent Posts</h3>
-
+                  <h3>Articles récents</h3>
                   <ul>
-                    <li><NuxtLink to="/blog-details">Consulted admitting is power acuteness.</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">Unsatiable entreaties may collecting Power.</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">Discovery incommode earnestly no he commanded</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">Unsatiable entreaties may collecting Power.</NuxtLink></li>
+                    <li v-for="post in postStore.getPosts.slice(0, 4)" :key="post.id">
+                      <NuxtLink :to="`/blog-details/${post.slug}`">{{ post.title }}</NuxtLink>
+                    </li>
                   </ul>
-
                 </div>
               </div>
 
               <div class="blog-sidebar-widget categories-widget" data-aos="zoom-in">
                 <div class="blog-sidebar-widget-inner shadow-box">
-                  <h3>Categories</h3>
-
+                  <h3>Catégories</h3>
                   <ul>
-                    <li><NuxtLink to="/blog-details">-Analysis</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-Firewall</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-IT Solutions</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-Security</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-Technology</NuxtLink></li>
+                    <li v-for="category in postCategoryStore.getCategories" :key="category.id">
+                      <NuxtLink :to="`/blog?category=${category.slug}`">- {{ category.name }}</NuxtLink>
+                    </li>
                   </ul>
-
                 </div>
               </div>
 
               <div class="blog-sidebar-widget tags-widget" data-aos="zoom-in">
                 <div class="blog-sidebar-widget-inner shadow-box">
                   <h3>Tags</h3>
-
                   <ul>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">SAAS</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Development</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">UI/UX</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Web</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Figma</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Java</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">WordPress</NuxtLink></li>
+                    <li v-for="tag in postTagStore.getTags" :key="tag.id">
+                      <NuxtLink class="theme-btn" :to="`/blog?tag=${tag.slug}`">{{ tag.name }}</NuxtLink>
+                    </li>
                   </ul>
-
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </div>
     </div>
-  </section></template>
+  </section>
+</template>

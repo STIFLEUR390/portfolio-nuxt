@@ -58,21 +58,16 @@ export interface Project {
   id: number
   title: string
   slug: string
-  year: string
   cover_image: string
-  gallery: string[]
-  is_published: boolean
-  hero_text: string
-  problem: string
-  approach: string
-  solution: string
-  project_link: string
-  repository_link: string | null
+  summary: string
+  description: string
+  type?: string
+  gallery?: string[]
+  created_at: string
+  updated_at: string
   client?: Client
   service?: Service
   skills?: Skill[]
-  created_at: string
-  updated_at: string
 }
 
 export interface ProjectCategory {
@@ -210,4 +205,70 @@ export interface SkillsState extends BaseState {
 
 export interface SocialMediaState extends BaseState {
   socialMedias: SocialMedia[]
+}
+
+export interface PostCategory {
+  id: number
+  name: string
+  slug: string
+  created_at: string
+  updated_at: string
+  posts?: Post[]
+}
+
+export interface Author {
+  id: number
+  name: string
+  email: string
+  avatar: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Post {
+  id: number
+  title: string
+  slug: string
+  cover_image: string
+  summary: string
+  content: string
+  is_published: boolean
+  author?: Author
+  tags?: PostTag[]
+  comments?: any[] // À typer plus précisément si nécessaire
+  created_at: string
+  updated_at: string
+}
+
+export interface PostState {
+  posts: Post[]
+  loading: boolean
+  error: string | null
+  pagination: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+  } | null
+}
+
+export interface PostCategoryState {
+  categories: PostCategory[]
+  loading: boolean
+  error: string | null
+}
+
+export interface PostTag {
+  id: number
+  name: string
+  slug: string
+  created_at: string
+  updated_at: string
+  posts?: Post[]
+}
+
+export interface PostTagState {
+  tags: PostTag[]
+  loading: boolean
+  error: string | null
 } 

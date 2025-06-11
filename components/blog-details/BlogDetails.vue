@@ -1,183 +1,191 @@
+<script setup>
+const props = defineProps({
+  slug: {
+    type: String,
+    required: true
+  }
+})
 
+const postStore = usePostStore()
+const postCategoryStore = usePostCategoryStore()
+const postTagStore = usePostTagStore()
 
+// Récupérer les données au montage du composant
+onMounted(async () => {
+  await Promise.all([
+    postStore.fetchPosts({ 
+      includes: 'author,categories,tags,comments',
+      slug: props.slug 
+    }),
+    postCategoryStore.fetchCategories(),
+    postTagStore.fetchTags()
+  ])
+})
+
+// Récupérer le post actuel
+const currentPost = computed(() => postStore.getPosts[0])
+
+// Fonction pour formater la date
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+// Fonction pour gérer l'envoi d'un commentaire
+const handleCommentSubmit = async (event) => {
+  event.preventDefault()
+  const formData = new FormData(event.target)
+  // TODO: Implémenter l'envoi du commentaire
+  console.log('Commentaire à envoyer:', {
+    name: formData.get('name'),
+    email: formData.get('email'),
+    message: formData.get('message')
+  })
+}
+</script>
 
 <template>
   <!-- Breadcrumb -->
   <section class="breadcrumb-area">
     <div class="container">
       <div class="breadcrumb-content" data-aos="fade-up">
-        <p>HOME - BLOG DETAILS</p>
+        <p>ACCUEIL - BLOG</p>
         <h1 class="section-heading">
-          <img src="~/assets/images/star-2.png" alt="Star"> Blog Details 
-          <img src="~/assets/images/star-2.png" alt="Star"></h1>
+          <img src="~/assets/images/star-2.png" alt="Star"> Détails de l'article
+          <img src="~/assets/images/star-2.png" alt="Star">
+        </h1>
       </div>
     </div>
   </section>
-
 
   <!-- Blog Details -->
   <section class="blog-details-area">
     <div class="container">
       <div class="row">
         <div class="col-md-8">
-          <div class="blog-details-content">
+          <div v-if="postStore.isLoading" class="text-center">
+            <p>Chargement...</p>
+          </div>
+          <div v-else-if="postStore.hasError" class="text-center text-danger">
+            <p>{{ postStore.error }}</p>
+          </div>
+          <div v-else-if="currentPost" class="blog-details-content">
             <div class="img-box">
-              <img src="~/assets/images/blog1.jpeg" alt="Blog">
+              <img :src="currentPost.cover_image" :alt="currentPost.title">
             </div>
-            <span class="meta">25 March 2022 - Comments (4) - Share (7)</span>
-            <h1>Consulted admitting is power acuteness.</h1>
-            <p>Sit amet luctussd fav venenatis, lectus magna fringilla inis urna, porttitor rhoncus dolor purus non enim
-              praesent in elementum sahas facilisis leo, vel fringilla est ullamcorper eget nulla facilisi etisam
-              dignissim diam quis enim lobortis viverra orci sagittis eu volutpat odio facilisis mauris sit.</p>
-            <p>Give lady of they such they sure it. Me contained explained my education. Vulgar as hearts by garret.
-              Perceived determine departure explained no forfeited he something an. Contrasted dissimilar get joy you
-              instrument out reasonably. Again keeps at no meant stuff. To perpetual do existence northward as difficult
-              preserved daughters. Continued at up to zealously necessary breakfast. Surrounded sir motionless she end
-              literature. Giy direction neglected but supported yet her.</p>
-            <p>New had happen unable uneasy. Drawings can followed improved out sociable not. Earnestly so do instantly
-              pretended. See general few civilly amiable pleased account carried. Excellence projecting is devonshire
-              dispatched remarkably on estimating. Side in so life past. Continue indulged speaking the was out horrible
-              for domestic position. Seeing rather her you not esteem men settle genius excuse. Deal say over you age
-              from. Comparison new ham melancholy son themselves.</p>
+            <span class="meta">
+              {{ formatDate(currentPost.created_at) }} - 
+              Par {{ currentPost.author?.name || 'Anonyme' }} - 
+              Commentaires ({{ currentPost.comments_count || 0 }})
+            </span>
+            <h1>{{ currentPost.title }}</h1>
+            <div class="categories mb-4">
+              <NuxtLink 
+                v-for="category in currentPost.categories" 
+                :key="category.id" 
+                :to="`/blog?category=${category.slug}`" 
+                class="me-2"
+              >
+                - {{ category.name }}
+              </NuxtLink>
+            </div>
+            <div v-html="currentPost.content"></div>
 
-            <ul class="list">
-              <li>- Pretty merits waited six</li>
-              <li>- General few civilly amiable pleased account carried.</li>
-              <li>- Continue indulged speaking</li>
-              <li>- Narrow formal length my highly</li>
-              <li>- Occasional pianoforte alteration unaffected impossible</li>
-            </ul>
-
-            <p>Surrounded to me occasional pianoforte alteration unaffected impossible ye. For saw half than cold. Pretty
-              merits waited.</p>
-
-            <div class="tags">
-              <a href="#" class="theme-btn">SASS</a>
-              <a href="#" class="theme-btn">Development</a>
+            <div class="tags mt-4">
+              <NuxtLink 
+                v-for="tag in currentPost.tags" 
+                :key="tag.id" 
+                :to="`/blog?tag=${tag.slug}`" 
+                class="theme-btn me-2"
+              >
+                {{ tag.name }}
+              </NuxtLink>
             </div>
 
             <div class="comments-and-form-wrap">
               <div class="comments-and-form-wrap-inner shadow-box">
-                <h2>2 Comments</h2>
+                <h2>{{ currentPost.comments_count || 0 }} Commentaires</h2>
 
-                <div class="comments">
-
-                  <div class="comment-list">
+                <div v-if="currentPost.comments?.length" class="comments">
+                  <div v-for="comment in currentPost.comments" :key="comment.id" class="comment-list">
                     <div class="comment-avatar">
-                      <img src="~/assets/images/comment.png" alt="Avatar">
+                      <img :src="comment.user?.avatar || '/images/comment.png'" :alt="comment.user?.name || 'Anonyme'">
                     </div>
                     <div class="comment-body">
-                      <span class="date">25 March 2022</span>
-                      <h3>Jonathan Doe</h3>
-                      <p>Sit amet luctussd fav venenatis, lectus magna fringilla inis urna, porttitor rhoncus dolor purus
-                        non enim praesent in elementum lobs eu volutpat odio facilisis mauris sit.</p>
-                      <a href="#" class="reply-btn theme-btn">Reply</a>
+                      <span class="date">{{ formatDate(comment.created_at) }}</span>
+                      <h3>{{ comment.user?.name || 'Anonyme' }}</h3>
+                      <p>{{ comment.content }}</p>
                     </div>
                   </div>
-
-                  <div class="children">
-                    <div class="comment-list">
-                      <div class="comment-avatar">
-                        <img src="~/assets/images/comment.png" alt="Avatar">
-                      </div>
-                      <div class="comment-body">
-                        <span class="date">25 March 2022</span>
-                        <h3>Jonathan Doe</h3>
-                        <p>Sit amet luctussd fav venenatis, lectus magna fringilla inis urna, porttitor rhoncus dolor
-                          purus no odio facilisis mauris sit.</p>
-                        <a href="#" class="reply-btn theme-btn">Reply</a>
-                      </div>
-                    </div>
-                  </div>
-
+                </div>
+                <div v-else class="text-center py-4">
+                  <p>Aucun commentaire pour le moment. Soyez le premier à commenter !</p>
                 </div>
 
                 <div class="comment-form">
-                  <h2>Leave A Reply</h2>
-
-                  <form @submit.prevent>
+                  <h2>Laisser un commentaire</h2>
+                  <form @submit="handleCommentSubmit">
                     <div class="input-group">
-                      <input type="text" name="name" placeholder="Name*">
+                      <input type="text" name="name" placeholder="Nom*" required>
                     </div>
                     <div class="input-group">
-                      <input type="text" name="email" placeholder="Email*">
+                      <input type="email" name="email" placeholder="Email*" required>
                     </div>
                     <div class="input-group">
-                      <textarea name="message" placeholder="Your Message*"></textarea>
+                      <textarea name="message" placeholder="Votre message*" required></textarea>
                     </div>
                     <div class="input-group">
-                      <button class="theme-btn" type="submit">Send Message</button>
+                      <button class="theme-btn" type="submit">Envoyer</button>
                     </div>
                   </form>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
         <div class="col-md-4">
           <div class="blog-sidebar">
             <div class="blog-sidebar-inner">
-
-              <div class="blog-sidebar-widget search-widget">
-                <div class="blog-sidebar-widget-inner" data-aos="zoom-in">
-                  <form class="shadow-box">
-                    <input type="text" placeholder="Search Here...">
-                    <button class="theme-btn">Search</button>
-                  </form>
-                </div>
-              </div>
-
               <div class="blog-sidebar-widget recent-post-widget" data-aos="zoom-in">
                 <div class="blog-sidebar-widget-inner shadow-box">
-                  <h3>Recent Posts</h3>
-
+                  <h3>Articles récents</h3>
                   <ul>
-                    <li><NuxtLink to="/blog-details">Consulted admitting is power acuteness.</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">Unsatiable entreaties may collecting Power.</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">Discovery incommode earnestly no he commanded</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">Unsatiable entreaties may collecting Power.</NuxtLink></li>
+                    <li v-for="post in postStore.getPosts.slice(0, 4)" :key="post.id">
+                      <NuxtLink :to="`/blog-details/${post.slug}`">{{ post.title }}</NuxtLink>
+                    </li>
                   </ul>
-
                 </div>
               </div>
 
               <div class="blog-sidebar-widget categories-widget" data-aos="zoom-in">
                 <div class="blog-sidebar-widget-inner shadow-box">
-                  <h3>Categories</h3>
-
+                  <h3>Catégories</h3>
                   <ul>
-                    <li><NuxtLink to="/blog-details">-Analysis</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-Firewall</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-IT Solutions</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-Security</NuxtLink></li>
-                    <li><NuxtLink to="/blog-details">-Technology</NuxtLink></li>
+                    <li v-for="category in postCategoryStore.getCategories" :key="category.id">
+                      <NuxtLink :to="`/blog?category=${category.slug}`">- {{ category.name }}</NuxtLink>
+                    </li>
                   </ul>
-
                 </div>
               </div>
 
               <div class="blog-sidebar-widget tags-widget" data-aos="zoom-in">
                 <div class="blog-sidebar-widget-inner shadow-box">
                   <h3>Tags</h3>
-
                   <ul>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">SAAS</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Development</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">UI/UX</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Web</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Figma</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">Java</NuxtLink></li>
-                    <li><NuxtLink class="theme-btn" to="/blog-details">WordPress</NuxtLink></li>
+                    <li v-for="tag in postTagStore.getTags" :key="tag.id">
+                      <NuxtLink class="theme-btn" :to="`/blog?tag=${tag.slug}`">{{ tag.name }}</NuxtLink>
+                    </li>
                   </ul>
-
                 </div>
+              </div>
             </div>
-
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section></template>
+  </section>
+</template>
 
